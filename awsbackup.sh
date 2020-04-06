@@ -60,7 +60,7 @@ do
     files="$files $(realpath --relative-to=/ "$(echo "$f" | sed 's/ /\\ /g')")"
 done < $BASEDIR/$jobname
 
-keyfile=`realpath $2`
+pubkeyfile=`realpath $2`
 tmpdir=`realpath $3`
 awsbucket=$4
 
@@ -86,22 +86,22 @@ dd if=/dev/urandom bs=128 count=1 status=none | base64 -w 0 > $tarkey
 
 # encrypt the tar
 log "Encrypting tar..."
-openssl aes-256-cbc -salt -pbkdf2 -pass file:$keyfile -in $tar -out $enctar
+openssl aes-256-cbc -salt -pbkdf2 -pass file:$tarkey -in $tar -out $enctar
 
 # encrypt the list
 log "Encrypting list..."
-openssl aes-256-cbc -salt -pbkdf2 -pass file:$keyfile -in $listfile -out $enclistfile
+openssl aes-256-cbc -salt -pbkdf2 -pass file:$tarkey -in $listfile -out $enclistfile
 
 # encrypt the tar
 log "Encrypting key..."
-openssl rsautl -encrypt -pubin -inkey $pubkey -in $tarkey > $enctarkey
+openssl rsautl -encrypt -pubin -inkey $pubkeyfile -in $tarkey -out $enctarkey
 
 
 # delete the tar
 log "Deleting unencrypted tar, listfile and key"
 rm $tar $tarkey $listfile
 
-log "Uploading $tarkey to AWS"
+log "Uploading $enctarkey to AWS"
 upload $enctarkey
 log "Uploading $enclistfile to AWS"
 upload $enclistfile
