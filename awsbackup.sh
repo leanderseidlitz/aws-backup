@@ -67,19 +67,19 @@ awsbucket=$4
 datetime=`date "+%Y%m%dT%H%M%SZ"`
 tarkey="$tmpdir/$jobname-$datetime.key"
 enctarkey="$tmpdir/$jobname-$datetime.key.enc"
-tar="$tmpdir/$jobname-$datetime.tar.xz"
-enctar="$tmpdir/$jobname-$datetime.tar.xz.enc"
+tar="$tmpdir/$jobname-$datetime.tar.gz"
+enctar="$tmpdir/$jobname-$datetime.tar.gz.enc"
 listfile="$tmpdir/$jobname-$datetime.list"
 enclistfile="$tmpdir/$jobname-$datetime.list.enc"
 
 log "Starting backup to AWS, jobname $jobname"
 # create the archive
 log "Backing up to $tar"
-tar -Jcf $tar -C / $files
+tar -czf $tar -C / $files
 
 # create the file list
 log "Generating file list $listfile"
-tar -Jtvf $tar > $listfile
+tar -tzvf $tar > $listfile
 
 log "Generating key for tar and list"
 dd if=/dev/urandom bs=128 count=1 status=none | base64 -w 0 > $tarkey
