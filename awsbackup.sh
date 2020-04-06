@@ -1,4 +1,5 @@
 #!/bin/bash
+BASEDIR=/home/acknexster/Dev_local/aws-backup
 
 uploadDeep () {
     aws s3 cp $1 s3://$awsbucket/$jobname/ --storage-class DEEP_ARCHIVE
@@ -52,16 +53,24 @@ if [ ! -d "$3" ]; then
     exit 1
 fi
 
-# read file list to space separated
 jobname=$1
-files=`cat $jobname | tr "\n" " "`
-keyfile=$2
+# read file list to relative paths from /, space separated, escape spaces in filename
+while read f
+do
+    files="$files $(realpath --relative-to=/ "$(echo "$f" | sed 's/ /\\ /g')")"
+done < $BASEDIR/$jobname
+
+keyfile=`realpath $2`
+tmpdir=`realpath $3`
 awsbucket=$4
 
 datetime=`date "+%Y%m%dT%H%M%SZ"`
-tar="$3/$1-$datetime.tar.xz"
-enctar="$3/$1-$datetime.tar.xz.enc"
-listfile="$3/$1-$datetime.list"
+tarkey="$tmpdir/$jobname-$datetime.key"
+enctarkey="$tmpdir/$jobname-$datetime.key.enc"
+tar="$tmpdir/$jobname-$datetime.tar.xz"
+enctar="$tmpdir/$jobname-$datetime.tar.xz.enc"
+listfile="$tmpdir/$jobname-$datetime.list"
+enclistfile="$tmpdir/$jobname-$datetime.list.enc"
 
 log "Starting backup to AWS, jobname $jobname"
 # create the archive
@@ -69,25 +78,38 @@ log "Backing up to $tar"
 tar -Jcf $tar -C / $files
 
 # create the file list
-log "Generatiung file list $listfile"
+log "Generating file list $listfile"
 tar -Jtvf $tar > $listfile
 
+log "Generating key for tar and list"
+dd if=/dev/urandom bs=128 count=1 status=none | base64 -w 0 > $tarkey
+
 # encrypt the tar
-log "Encrypting tar to $tar.enc"
+log "Encrypting tar..."
 openssl aes-256-cbc -salt -pbkdf2 -pass file:$keyfile -in $tar -out $enctar
 
-# delete the tar
-log "Deleting $tar"
-rm $tar
+# encrypt the list
+log "Encrypting list..."
+openssl aes-256-cbc -salt -pbkdf2 -pass file:$keyfile -in $listfile -out $enclistfile
 
-log "Uploading $listfile to AWS"
-upload $listfile
+# encrypt the tar
+log "Encrypting key..."
+openssl rsautl -encrypt -pubin -inkey $pubkey -in $tarkey > $enctarkey
+
+
+# delete the tar
+log "Deleting unencrypted tar, listfile and key"
+rm $tar $tarkey $listfile
+
+log "Uploading $tarkey to AWS"
+upload $enctarkey
+log "Uploading $enclistfile to AWS"
+upload $enclistfile
 log "Uploading $enctar to AWS DEEP GLACIER"
 uploadDeep $enctar
 
-log "Deleting $listfile, $enctar"
-rm $listfile $enctar
-
+log "Deleting encrypted files after upload"
+rm $enctarkey $enclistfile $enctar
 
 
 log "Done backing up to AWS"
