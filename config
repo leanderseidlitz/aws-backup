@@ -1,4 +1,0 @@
-awsbucket=b1x5qkdvdac8ztfky7qx72aqckaevpukl5ssxlwrre7u
-pubkeyfile=aws-public.pem
-tmpdir=/home/acknexster/Dev_local/aws-backup
-storageclass="GLACIER" # AWS Storage class for tar (GLACIER, DEEP_ARCHIVE, STANDARD, ...)
