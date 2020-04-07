@@ -16,7 +16,7 @@ upload () {
 }
 
 log () {
-    echo "$(date "+%Y/%m/%d-%H:%M:%S") $1" >> backup.log
+    echo "$(date "+%Y/%m/%d-%H:%M:%S") $1" >> $BASEDIR/backup.log
     echo "$1"
 }
 
