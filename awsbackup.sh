@@ -33,23 +33,14 @@ if [ -z "$1" ]; then
     printusage
     exit 1
 fi
-#if [ -z "$4" ]; then
-#    echo "AWS bucket name not supplied"
-#    printusage
-#    exit 1
-#fi
-#if [ ! -f "$2" ]; then
-#    echo "$2 is not a file."
-#    printusage
-#    exit 1
-#fi
-#if [ ! -d "$3" ]; then
-#    echo "$3 is not a directory."
-#    printusage
-#    exit 1
-#fi
 
 jobname=$1
+if [ ! -f "$BASEDIR/$jobname" ]; then
+    echo "job file ($BASEDIR/$jobname) is missing."
+    printusage
+    exit 1
+fi
+
 # read file list to relative paths from /, space separated, escape spaces in filename
 while read f
 do
@@ -57,10 +48,12 @@ do
 done < $BASEDIR/$jobname
 
 # load config file
-. config
-#pubkeyfile=`realpath $2`
-#tmpdir=`realpath $3`
-#awsbucket=$4
+if test -f $BASEDIR/config ; then
+    . $BASEDIR/config
+else
+    echo "config file ($BASEDIR/config) missing"
+    exit 1
+fi
 
 datetime=`date "+%Y%m%dT%H%M%SZ"`
 tarkey="$tmpdir/$jobname-$datetime.key"
