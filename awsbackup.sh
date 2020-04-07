@@ -1,5 +1,12 @@
 #!/bin/bash
-BASEDIR=/home/acknexster/Dev_local/aws-backup
+
+# load config file
+if test -f config ; then
+    . config
+else
+    echo "config file ($(pwd)/config) missing"
+    exit 1
+fi
 
 uploadClass () {
     aws s3 cp $1 s3://$awsbucket/$jobname/ --storage-class $2
@@ -46,14 +53,6 @@ while read f
 do
     files="$files $(realpath --relative-to=/ "$(echo "$f" | sed 's/ /\\ /g')")"
 done < $BASEDIR/$jobname
-
-# load config file
-if test -f $BASEDIR/config ; then
-    . $BASEDIR/config
-else
-    echo "config file ($BASEDIR/config) missing"
-    exit 1
-fi
 
 datetime=`date "+%Y%m%dT%H%M%SZ"`
 tarkey="$tmpdir/$jobname-$datetime.key"
