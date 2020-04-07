@@ -66,11 +66,11 @@ awsbucket=$4
 
 datetime=`date "+%Y%m%dT%H%M%SZ"`
 tarkey="$tmpdir/$jobname-$datetime.key"
-enctarkey="$tmpdir/$jobname-$datetime.key.enc"
+enctarkey="$tmpdir/$jobname-$datetime.key.aenc"
 tar="$tmpdir/$jobname-$datetime.tar.gz"
-enctar="$tmpdir/$jobname-$datetime.tar.gz.enc"
+enctar="$tmpdir/$jobname-$datetime.tar.gz.senc"
 listfile="$tmpdir/$jobname-$datetime.list"
-enclistfile="$tmpdir/$jobname-$datetime.list.enc"
+enclistfile="$tmpdir/$jobname-$datetime.list.senc"
 
 log "Starting backup to AWS, jobname $jobname"
 # create the archive
