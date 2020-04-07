@@ -1,0 +1,4 @@
+awsbucket=[name of aws bucket]
+pubkeyfile=[pubkey in pem format]
+tmpdir=[dir to store tars temporarily]
+storageclass="DEEP_ARCHIVE" # AWS Storage class for tar (GLACIER, DEEP_ARCHIVE, STANDARD, ...)
