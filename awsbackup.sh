@@ -112,7 +112,7 @@ log "Uploading $enctarkey to AWS"
 upload $enctarkey
 log "Uploading $enclistfile to AWS"
 upload $enclistfile
-log "Uploading $enctar to AWS DEEP GLACIER"
+log "Uploading $enctar to AWS $storageclass"
 uploadClass $enctar $storageclass
 
 log "Deleting encrypted files after upload"
