@@ -21,7 +21,7 @@ log () {
 }
 
 printusage () {
-    echo "Usage: $0 [jobname]"
+    echo "Usage: $0 [jobname] [-z]"
 }
 
 # print help
@@ -31,6 +31,7 @@ then
    printusage
    echo "Where"
    echo -e "\tjobname is the name to use for the archive"
+   echo -e "\t-z: use gzip for tar"
    exit 0
 fi
    
@@ -39,6 +40,12 @@ if [ -z "$1" ]; then
     echo "jobname not supplied"
     printusage
     exit 1
+fi
+
+if [ "$2" = "-z" ]; then
+    gzip="true"
+else
+    gzip="false"
 fi
 
 jobname=$1
@@ -57,20 +64,30 @@ done < $BASEDIR/$jobname
 datetime=`date "+%Y%m%dT%H%M%SZ"`
 tarkey="$tmpdir/$jobname-$datetime.key"
 enctarkey="$tmpdir/$jobname-$datetime.key.aenc"
-tar="$tmpdir/$jobname-$datetime.tar.gz"
-enctar="$tmpdir/$jobname-$datetime.tar.gz.senc"
+if [ "$gzip" == "true" ]; then
+    tar="$tmpdir/$jobname-$datetime.tar.gz"
+    enctar="$tmpdir/$jobname-$datetime.tar.gz.senc"
+else
+    tar="$tmpdir/$jobname-$datetime.tar"
+    enctar="$tmpdir/$jobname-$datetime.tar.senc"
+fi
 listfile="$tmpdir/$jobname-$datetime.list"
 enclistfile="$tmpdir/$jobname-$datetime.list.senc"
 
 log "Starting backup to AWS, jobname $jobname"
-# create the archive
-log "Backing up to $tar"
-tar -czf $tar -C / $files
-
-# create the file list
-log "Generating file list $listfile"
-tar -tzvf $tar > $listfile
-
+# create the archive and file list
+if [ "$gzip" = "true" ]; then
+    log "Backing up to $tar"
+    tar -czf $tar -C / $files
+    log "Generating file list $listfile"
+    tar -tzvf $tar > $listfile
+else
+    log "Backing up to $tar"
+    tar -cf $tar -C / $files
+    log "Generating file list $listfile"
+    tar -tvf $tar > $listfile
+fi
+ 
 log "Generating key for tar and list"
 dd if=/dev/urandom bs=128 count=1 status=none | base64 -w 0 > $tarkey
 
