@@ -1,4 +1,3 @@
-BASEDIR=[dir this script is installed to]
 awsbucket=[name of aws bucket]
 pubkeyfile=[pubkey in pem format]
 tmpdir=[dir to store tars temporarily]
