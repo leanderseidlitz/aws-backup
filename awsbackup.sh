@@ -114,7 +114,7 @@ log "Generating mtree file list $enclist"
 bsdtar -C / -cf - --format=mtree --options='sha256' $files | openssl aes-256-ctr -salt -pbkdf2 -pass file:$listkey -out $enclist
 
 log "Backing up to encrypted $enctar"
-tar $compopts --warning=no-file-changed -cf - -C / $files | pv -i 60 | openssl aes-256-ctr -salt -pbkdf2 -pass file:$tarkey -out $enctar
+tar $compopts --warning=no-file-changed -cf - -C / $files | openssl aes-256-ctr -salt -pbkdf2 -pass file:$tarkey -out $enctar
 
 log "Generating metafile"
 echo "SHA256 LIST $(sha256sum $enclist)" > $meta
