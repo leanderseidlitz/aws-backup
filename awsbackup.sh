@@ -60,22 +60,18 @@ while getopts ":hz:" o; do
 done
 shift $((OPTIND-1))
 
-if [ ! -d $(dirname "$tmpdir") ]
-then
-    eerror "parent of tmpdir ($(dirname $tmpdir)) is missing."
-    die "action: create dir, fix config"
-fi
-if [ ! -d "$tmpdir" ]
-then
-    einfo "Creating tmpdir ($tmpdir)"
-    mkdir "$tmpdir"
-fi
-
 jobname=$1
 if [ ! -f "$BASEDIR/jobs/$jobname" ]; then
     error "job file $BASEDIR/jobs/$jobname is missing."
     die "action: create jobfile at $BASEDIR/jobs/$jobname"
 fi
+
+if [ ! -d $(dirname "$tmpdir") ]
+then
+    eerror "parent of tmpdir ($(dirname $tmpdir)) is missing."
+    die "action: create dir, fix config"
+fi
+[[ -d "$tmpdir" ]] || mkdir -p "$tmpdir"
 
 # read file list to relative paths from /, space separated, escape spaces in filename
 files=""
@@ -89,7 +85,7 @@ log "Backing up $files"
 checkkey
 
 # define filenames
-datetime=$(date "+%Y-%m-%dT%H:%M:%SZ")
+datetime=$(date "+%Y%m%dT%H%M%SZ")
 tarkey="$tmpdir/$jobname-$datetime.tarkey"
 listkey="$tmpdir/$jobname-$datetime.listkey"
 if [ "$zstd" == "true" ]; then
@@ -106,8 +102,8 @@ encmeta="$tmpdir/$jobname-$datetime.meta.aenc"
 log "Starting backup to AWS, jobname $jobname"
 
 log "Generating keys"
-openssl rand -hex 16 > $tarkey
-openssl rand -hex 16 > $listkey
+openssl rand -hex 64 > $tarkey
+openssl rand -hex 64 > $listkey
 
 # create the archive and file list
 log "Generating mtree file list $enclist"
@@ -127,7 +123,7 @@ openssl rsautl -encrypt -pubin -inkey $pubkeyfile -in $meta -out $encmeta
 
 # delete the tar
 log "Deleting unencrypted keys, metafile"
-rm $tarkey $listkey $meta
+rm -f $tarkey $listkey $meta
 
 log "Uploading $encmeta to AWS"
 upload $encmeta $datetime
@@ -137,7 +133,7 @@ log "Uploading $enctar to AWS $storageclass"
 uploadClass $enctar $datetime $storageclass
 
 log "Deleting leftover files after upload"
-rm $encmeta $enclist $enctar
+rm -f $encmeta $enclist $enctar
 
 
 log "Done backing up to AWS"
