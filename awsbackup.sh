@@ -3,6 +3,7 @@
 set -e
 set -o pipefail
 set -u
+umask 077
 
 BASEDIR="$(dirname $0)"
 source $BASEDIR/common/common.sh
